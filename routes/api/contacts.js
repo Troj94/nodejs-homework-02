@@ -1,24 +1,59 @@
-const express = require('express')
-const router = express.Router()
+/* eslint-disable quotes */
+/* eslint-disable semi */
 
-router.get('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+const express = require("express");
+const router = express.Router();
+const {
+  addContactValidation,
+} = require("../../middleware/middleware");
+const {
+  listContacts,
+  getContactById,
+  addContact,
+  removeContact,
+  updateContact,
+} = require("../../model/index");
 
-router.get('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get("/", async (req, res, next) => {
+  const contacts = await listContacts();
+  res.status(200).json(contacts);
+});
 
-router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get("/:contactId", async (req, res, next) => {
+  const id = await parseInt(req.params.contactId);
 
-router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+  const contact = await getContactById(id);
+  if (!contact) {
+    res.status(404).json({ message: "Not found" });
+  } else {
+    res.status(200).json(contact);
+  }
+});
 
-router.patch('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.post("/", addContactValidation, async (req, res, next) => {
+  const writeContact = await addContact(req.body);
+  res.status(201).json(writeContact);
+});
 
-module.exports = router
+router.delete("/:contactId", async (req, res, next) => {
+  const id = await parseInt(req.params.contactId);
+  const deleteContact = await removeContact(id);
+  if (!deleteContact) {
+    res.status(404).json({ message: "Not found" });
+  } else {
+    res.status(200).json(deleteContact);
+  }
+});
+
+router.put("/:contactId", async (req, res, next) => {
+  const id = await parseInt(req.params.contactId);
+  const bodyContact = await req.body;
+  if (Object.keys(bodyContact).length === 0) {
+    res.status(400).json({ message: "missing fields" });
+  } else {
+    const newContact = await updateContact(id, bodyContact);
+    res.status(200).json(newContact);
+  }
+});
+
+module.exports = router;
